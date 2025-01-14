@@ -9,7 +9,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BookService {
 
-    private final BookRepository repository;
+    private final BookRepository bookRepository;
 
     public void save(BookRequest request) {
         var book = Book.builder()
@@ -17,10 +17,10 @@ public class BookService {
                 .author(request.getAuthor())
                 .isbn(request.getIsbn())
                 .build();
-        repository.save(book);
+        bookRepository.save(book);
     }
 
     public List<Book> findAll() {
-        return repository.findAll();
+        return bookRepository.findAll();
     }
 }

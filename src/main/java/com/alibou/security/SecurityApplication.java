@@ -22,7 +22,7 @@ public class SecurityApplication {
 
 	@Bean
 	public CommandLineRunner commandLineRunner(
-			AuthenticationService service
+			AuthenticationService authService
 	) {
 		return args -> {
 			var admin = RegisterRequest.builder()
@@ -32,7 +32,7 @@ public class SecurityApplication {
 					.password("password")
 					.role(ADMIN)
 					.build();
-			System.out.println("Admin token: " + service.register(admin).getAccessToken());
+			System.out.println("Admin token: " + authService.register(admin).getAccessToken());
 
 			var manager = RegisterRequest.builder()
 					.firstname("Admin")
@@ -41,7 +41,7 @@ public class SecurityApplication {
 					.password("password")
 					.role(MANAGER)
 					.build();
-			System.out.println("Manager token: " + service.register(manager).getAccessToken());
+			System.out.println("Manager token: " + authService.register(manager).getAccessToken());
 
 		};
 	}
