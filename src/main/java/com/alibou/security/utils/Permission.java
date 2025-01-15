@@ -1,4 +1,4 @@
-package com.alibou.security.user;
+package com.alibou.security.utils;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

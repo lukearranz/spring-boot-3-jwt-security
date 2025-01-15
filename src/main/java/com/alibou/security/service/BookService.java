@@ -1,5 +1,8 @@
-package com.alibou.security.book;
+package com.alibou.security.service;
 
+import com.alibou.security.dto.BookRequest;
+import com.alibou.security.entity.Book;
+import com.alibou.security.repository.BookRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

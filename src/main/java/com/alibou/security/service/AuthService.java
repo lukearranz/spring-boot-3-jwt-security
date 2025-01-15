@@ -1,12 +1,14 @@
-package com.alibou.security.auth;
+package com.alibou.security.service;
 
-import com.alibou.security.config.JwtService;
-import com.alibou.security.token.Token;
-import com.alibou.security.token.TokenRepository;
-import com.alibou.security.token.TokenType;
-import com.alibou.security.user.Role;
-import com.alibou.security.user.User;
-import com.alibou.security.user.UserRepository;
+import com.alibou.security.dto.AuthRequest;
+import com.alibou.security.dto.AuthResponse;
+import com.alibou.security.dto.RegisterRequest;
+import com.alibou.security.jwt.JwtService;
+import com.alibou.security.entity.Token;
+import com.alibou.security.repository.TokenRepository;
+import com.alibou.security.jwt.TokenType;
+import com.alibou.security.entity.User;
+import com.alibou.security.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -14,24 +16,21 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 
 @Service
 @RequiredArgsConstructor
-public class AuthenticationService {
+public class AuthService {
   private final UserRepository repository;
   private final TokenRepository tokenRepository;
   private final PasswordEncoder passwordEncoder;
   private final JwtService jwtService;
   private final AuthenticationManager authenticationManager;
 
-  public AuthenticationResponse register(RegisterRequest request) {
+  public AuthResponse register(RegisterRequest request) {
     var user = User.builder()
         .firstname(request.getFirstname())
         .lastname(request.getLastname())
@@ -43,13 +42,13 @@ public class AuthenticationService {
     var jwtToken = jwtService.generateToken(user);
     var refreshToken = jwtService.generateRefreshToken(user);
     saveUserToken(savedUser, jwtToken);
-    return AuthenticationResponse.builder()
+    return AuthResponse.builder()
         .accessToken(jwtToken)
             .refreshToken(refreshToken)
         .build();
   }
 
-  public AuthenticationResponse authenticate(AuthenticationRequest request) {
+  public AuthResponse authenticate(AuthRequest request) {
     authenticationManager.authenticate(
         new UsernamePasswordAuthenticationToken(
             request.getEmail(),
@@ -62,32 +61,10 @@ public class AuthenticationService {
     var refreshToken = jwtService.generateRefreshToken(user);
     revokeAllUserTokens(user);
     saveUserToken(user, jwtToken);
-    return AuthenticationResponse.builder()
+    return AuthResponse.builder()
         .accessToken(jwtToken)
             .refreshToken(refreshToken)
         .build();
-  }
-
-  private void saveUserToken(User user, String jwtToken) {
-    var token = Token.builder()
-        .user(user)
-        .token(jwtToken)
-        .tokenType(TokenType.BEARER)
-        .expired(false)
-        .revoked(false)
-        .build();
-    tokenRepository.save(token);
-  }
-
-  private void revokeAllUserTokens(User user) {
-    var validUserTokens = tokenRepository.findAllValidTokenByUser(user.getId());
-    if (validUserTokens.isEmpty())
-      return;
-    validUserTokens.forEach(token -> {
-      token.setExpired(true);
-      token.setRevoked(true);
-    });
-    tokenRepository.saveAll(validUserTokens);
   }
 
   public void refreshToken(
@@ -109,12 +86,34 @@ public class AuthenticationService {
         var accessToken = jwtService.generateToken(user);
         revokeAllUserTokens(user);
         saveUserToken(user, accessToken);
-        var authResponse = AuthenticationResponse.builder()
+        var authResponse = AuthResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
         new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
       }
     }
+  }
+
+  private void saveUserToken(User user, String jwtToken) {
+    var token = Token.builder()
+            .user(user)
+            .token(jwtToken)
+            .tokenType(TokenType.BEARER)
+            .expired(false)
+            .revoked(false)
+            .build();
+    tokenRepository.save(token);
+  }
+
+  private void revokeAllUserTokens(User user) {
+    var validUserTokens = tokenRepository.findAllValidTokenByUser(user.getId());
+    if (validUserTokens.isEmpty())
+      return;
+    validUserTokens.forEach(token -> {
+      token.setExpired(true);
+      token.setRevoked(true);
+    });
+    tokenRepository.saveAll(validUserTokens);
   }
 }
