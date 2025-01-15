@@ -1,0 +1,12 @@
+     _          _       ____
+    / \   _ __ (_)     | __ )  __ _ ___  ___
+   / _ \ | '_ \| |_____|  _ \ / _` / __|/ _ \
+  / ___ \| |_) | |_____| |_) | (_| \__ \  __/
+ /_/   \_\ .__/|_|     |____/ \__,_|___/\___|
+         |_|
+
+  Project: ${spring.application.name}
+  Version: ${spring.application.version}
+  Environment: Using profile "${spring.profiles.active:default}"
+  Port: ${server.port}
+  Developed by: Lucas Arranz García
